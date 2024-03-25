@@ -1,0 +1,13 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+#include "NamespaceRedirect.h"
+
+namespace RNWinRTTestApp
+{
+    [default_interface]
+    runtimeclass MainPage : XAML_NAMESPACE.Controls.Page
+    {
+        MainPage();
+    }
+}

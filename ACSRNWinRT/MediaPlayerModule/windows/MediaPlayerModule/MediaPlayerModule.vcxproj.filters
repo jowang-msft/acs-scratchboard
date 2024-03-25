@@ -1,0 +1,24 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="Current" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Midl Include="ReactPackageProvider.idl" />
+    <Midl Include="MediaPlayerView.idl" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="pch.cpp" />
+    <ClCompile Include="$(GeneratedFilesDir)module.g.cpp" />
+    <ClCompile Include="ReactPackageProvider.cpp" />
+    <ClCompile Include="MediaPlayerView.cpp" />
+    <ClCompile Include="MediaPlayerViewManager.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="pch.h" />
+    <ClInclude Include="ReactPackageProvider.h" />
+    <ClInclude Include="MediaPlayerView.h" />
+    <ClInclude Include="MediaPlayerViewManager.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="PropertySheet.props" />
+    <None Include="MediaPlayerModule.def" />
+  </ItemGroup>
+</Project>

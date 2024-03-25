@@ -1,0 +1,11 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
+namespace MediaPlayerModule
+{
+    [default_interface] runtimeclass MediaPlayerView : Windows.UI.Xaml.Controls.MediaPlayerElement
+    {
+        MediaPlayerView(Microsoft.ReactNative.IReactContext context);
+        void UpdateProperties(Microsoft.ReactNative.IJSValueReader reader);
+    };
+}
