@@ -1,31 +1,25 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import React, { useRef, useEffect, createRef, useState } from "react";
+import React, { useRef, useEffect, useState } from "react";
 import {
-    Image,
-    SafeAreaView,
-    StyleSheet,
-    ScrollView,
     View,
     Text,
-    StatusBar,
-    Pressable,
-    Linking,
 } from "react-native";
 
 import {
-    Colors,
-    Header,
-} from "react-native/Libraries/NewAppScreen";
+    MediaPlayerElement,
+  } from 'react-native-xaml';
+  
 
 import { showNotification } from './Notifications';
 
 import ACS = Azure.Communication.Calling.WindowsClient;
 
-import MediaPlayerView from './MediaPlayerView';
+// import MediaPlayerView from './MediaPlayerView';
 
-let updateMediaSource: (arg0: string) => void;
+let updateIncomingVideoSource: (arg0: string) => void;
+let updateOutgoingVideoSource: (arg0: string) => void;
 
 async function testIncomingVideoAsync(): Promise<void> {
     console.info("*** ACS: Entering testIncomingVideoAsync");
@@ -43,7 +37,7 @@ async function testIncomingVideoAsync(): Promise<void> {
             tokenRefreshOptions);
 
         var callAgentOptions = new ACS.CallAgentOptions();
-        callAgentOptions.displayName = "RNWinRT Tester";
+        callAgentOptions.displayName = "RNW Tester";
 
         var callAgent = await callClient.createCallAgentAsync(creds, callAgentOptions);
 
@@ -52,7 +46,7 @@ async function testIncomingVideoAsync(): Promise<void> {
         incomingVideoOptions.streamKind = ACS.VideoStreamKind.remoteIncoming;
         joinCallOptions.incomingVideoOptions = incomingVideoOptions;
 
-        var groupCallLocator = new ACS.GroupCallLocator("<RELACE_GROUP_ID>");
+        var groupCallLocator = new ACS.GroupCallLocator("<REPLACE_WITH_GROUP_ID>");
         var call = await callAgent.joinAsync(groupCallLocator, joinCallOptions);
 
         call.addEventListener('remoteparticipantsupdated', 
@@ -77,12 +71,28 @@ async function testIncomingVideoAsync(): Promise<void> {
                                         case ACS.VideoStreamKind.remoteIncoming:
                                             var remoteIncomingVideoStream = stream as unknown as ACS.RemoteIncomingVideoStream;
                                             var uri = await remoteIncomingVideoStream.startPreviewAsync();
-                                            updateMediaSource(uri.absoluteUri);
+                                            updateIncomingVideoSource(uri.absoluteUri);
                                             console.info("*** ACS: " + "Incoming video received at " + uri.absoluteUri);
                                             break;
                                     }
                                     break;
                             }
+                        }
+                        else if (stream.direction == ACS.StreamDirection.outgoing) {
+                            switch(stream.state) {
+                                case ACS.VideoStreamState.available:
+                                    console.info("*** ACS: " + "OutgoingVideoStream available");
+                                    switch(stream.kind) {
+                                        case ACS.VideoStreamKind.localOutgoing:
+                                            var localOutgoingVideoStream = stream as unknown as ACS.LocalOutgoingVideoStream;
+                                            var uri = await localOutgoingVideoStream.startPreviewAsync();
+                                            updateOutgoingVideoSource(uri.absoluteUri);
+                                            console.info("*** ACS: " + "Outgoing video received at " + uri.absoluteUri);
+                                            break;
+                                    }
+                                    break;
+                            }
+
                         }
                     });
             });
@@ -94,9 +104,11 @@ async function testIncomingVideoAsync(): Promise<void> {
 }
 
 const App = () => {
-    const [streamUri, setStreamUri] = useState("https://content.jwplatform.com/manifests/yp34SRmf.m3u8");
+    const [incomingVideoStreamUri, setIncomingVideoStreamUri] = useState("http://sample.vodobox.net/skate_phantom_flex_4k/skate_phantom_flex_4k.m3u8");
+    const [outgoingVideoStreamUri, setOutgoingVideoStreamUri] = useState("https://cdn.flowplayer.com/a30bd6bc-f98b-47bc-abf5-97633d4faea0/hls/de3f6ca7-2db3-4689-8160-0f574a5996ad/playlist.m3u8");
 
-    updateMediaSource = setStreamUri;
+    updateIncomingVideoSource = setIncomingVideoStreamUri;
+    updateOutgoingVideoSource = setOutgoingVideoStreamUri;
 
     useEffect(() => {
         testIncomingVideoAsync().then(() => {
@@ -104,103 +116,26 @@ const App = () => {
         });
       }, []);
 
-    return (
-        <>
-            <StatusBar barStyle="dark-content" />
-            <SafeAreaView style={styles.root}>
-                <ScrollView
-                    contentInsetAdjustmentBehavior="automatic"
-                    style={styles.scrollView}>
-                    <Header />
-                    <View style={styles.body}>
-                        <View style={styles.sectionContainer}>
-                            <Text style={styles.sectionTitle}>Windows.UI.Notifications Example</Text>
-                            <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center' }}>
-                                <Text style={[{ paddingRight: 10 }, styles.sectionDescription]}>Click the button to show a notification: </Text>
-                                <Pressable style={styles.sectionDescriptionButton} onPress={() => {
-                                    showNotification({
-                                        template: Windows.UI.Notifications.ToastTemplateType.toastImageAndText01,
-                                        // The template schema can be found at https://docs.microsoft.com/previous-versions/windows/apps/hh761494(v=win.10)
-                                        text: "hello world",
-                                        image: {
-                                            src: "https://microsoft.github.io/react-native-windows/img/header_logo.svg",
-                                            alt: "React logo",
-                                        }
-                                    });
-                                }}>
-                                    <Text style={styles.sectionDescriptionButtonText}>Press</Text>
-                                </Pressable>
-                            </View>
-                        </View>
-                    </View>
-                    <View style={styles.body}>
-                        <View style={styles.sectionContainer}>
-                            <Text style={styles.sectionTitle}>Incoming video rendered through native ACS Windows SDK</Text>
-                            <SafeAreaView style={styles.App}>
-                                <MediaPlayerView uri={streamUri} />
-                            </SafeAreaView>
-                        </View>
-                    </View>
-                </ScrollView>
-            </SafeAreaView>
-        </>
-    );
+      return (
+        <View>
+          <View style={{width: 400, height: 300, backgroundColor: 'steelblue'}}>
+            <View>
+                <Text style={{fontSize: 18, textAlign: 'center'}}>
+                    Outgoing video stream
+                </Text>
+            </View>
+            <MediaPlayerElement source={outgoingVideoStreamUri} autoPlay="true" />
+          </View>
+          <View style={{width: 400, height: 300, backgroundColor: 'powderblue'}}>
+            <View>
+                <Text style={{fontSize: 18, textAlign: 'center'}}>
+                    Incoming video stream
+                </Text>            
+            </View>
+            <MediaPlayerElement source={incomingVideoStreamUri} autoPlay="true" />
+          </View>
+        </View>
+      );
 };
-
-const styles = StyleSheet.create({
-    scrollView: {
-        backgroundColor: Colors.white,
-    },
-    engine: {
-        position: "absolute",
-        right: 0,
-    },
-    body: {
-        backgroundColor: Colors.white,
-    },
-    root: {
-        backgroundColor: Colors.white,
-        flex: 1,
-    },
-    sectionContainer: {
-        marginTop: 32,
-        paddingHorizontal: 24,
-    },
-    sectionTitle: {
-        fontSize: 24,
-        fontWeight: "600",
-        color: Colors.black,
-    },
-    sectionDescription: {
-        marginTop: 8,
-        fontSize: 18,
-        fontWeight: "400",
-        color: Colors.dark,
-    },
-    sectionDescriptionButton: {
-        alignItems: 'center',
-        justifyContent: 'center',
-        paddingVertical: 4,
-        paddingHorizontal: 24,
-        borderRadius: 1,
-        backgroundColor: Colors.light,
-    },
-    sectionDescriptionButtonText: {
-        fontSize: 18,
-        fontWeight: "400",
-        color: Colors.dark,
-    },
-    highlight: {
-        fontWeight: "700",
-    },
-    footer: {
-        color: Colors.dark,
-        fontSize: 12,
-        fontWeight: "600",
-        padding: 4,
-        paddingRight: 12,
-        textAlign: "right",
-    },
-});
 
 export default App;
