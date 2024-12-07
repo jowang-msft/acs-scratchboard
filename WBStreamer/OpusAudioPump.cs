@@ -16,8 +16,8 @@ namespace WBStreamer
         {
             // Fire and forget to pump the Opus frames from a file.
             Task.Run(() => {
-                PumpOpusFramesFromFile(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"testaudio.opus"), channel);
-                //PumpPcmFramesFromFile(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"testaudio.wav"), channel);
+                //PumpOpusFramesFromFile(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"testaudio.opus"), channel);
+                PumpPcmFramesFromFile(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"testaudio.wav"), channel);
                 //PumpPcmFramesFromFile(@"c:\t\demo_audio.wav", channel);
             });
         }
