@@ -1,0 +1,7 @@
+﻿################################################################################
+# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
+################################################################################
+
+/WBStreamer/.vs/WBStreamer
+/WBStreamer/bin/Debug/net8.0
+/WBStreamer/obj
