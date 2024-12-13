@@ -19,3 +19,7 @@
 /TestACSAudioCodecs/.vs
 /TestACSAudioCodecs/bin
 /TestACSAudioCodecs/obj
+/TestAeTestDLL/.vs
+/TestAeTestDLL/bin/x64/Release/net6.0
+/TestAeTestDLL/obj
+*.json
