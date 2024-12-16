@@ -1,22 +1,25 @@
 ﻿using System.Runtime.InteropServices;
+using System.Text;
 using NAudio.Wave;
 
-// Media format can be found at https://skype.visualstudio.com/SCC/_search?action=contents&text=OPUS%20%3D%20102%2C&type=code&lp=code-Project&filters=ProjectFilters%7BSCC%7D&pageSize=25&result=DefaultCollection/SCC/media_stack_all/GBmaster//src/audio/inc/AudioPayloadEnum.h
+// Media format can be found at:
+// https://skype.visualstudio.com/SCC/_search?action=contents&text=OPUS%20%3D%20102%2C&type=code&lp=code-Project&filters=ProjectFilters%7BSCC%7D&pageSize=25&result=DefaultCollection/SCC/media_stack_all/GBmaster//src/audio/inc/AudioPayloadEnum.h
 
 namespace TestAeTestDLL
 {
     public static class NativeMethods
     {
+        // RtmPal.dll
         [DllImport("RtmPal.dll", CallingConvention = CallingConvention.StdCall)]
         public static extern ulong RtcPalStartup();
 
         [DllImport("RtmPal.dll", CallingConvention = CallingConvention.StdCall)]
         public static extern void RtcPalCleanup();
 
-
         [DllImport("RtmPal.dll", CallingConvention = CallingConvention.StdCall)]
         public static extern ulong RtcPalGetTimeLongIn100ns();
 
+        // aetest.dll
         [DllImport("aetest.dll", CallingConvention = CallingConvention.Cdecl)]
         public static extern IntPtr AESendConstruct();
 
@@ -27,13 +30,25 @@ namespace TestAeTestDLL
         public static extern IntPtr encoder_construct();
 
         [DllImport("aetest.dll", CallingConvention = CallingConvention.Cdecl)]
-        public static extern int encoder_select(IntPtr encoder, int adspPayloadType, int bitrate, int ptime, int channels);
+        public static extern int encoder_select(
+            IntPtr encoder,
+            int adspPayloadType,
+            int bitrate,
+            int ptime,
+            int channels);
 
         [DllImport("aetest.dll", CallingConvention = CallingConvention.Cdecl)]
         public static extern int encoder_get_sampling_rate(IntPtr encoder);
 
         [DllImport("aetest.dll", CallingConvention = CallingConvention.Cdecl)]
-        public static extern int encoder_encode(IntPtr encoder, byte[] pcm, int pcmLength, byte[] encodedData, ref int encodedDataLength, byte[] redEncodedData, ref int redEncodedDataLength);
+        public static extern int encoder_encode(
+            IntPtr encoder,
+            byte[] pcm,
+            int pcmLength,
+            byte[] encodedData,
+            ref int encodedDataLength,
+            byte[] redEncodedData,
+            ref int redEncodedDataLength);
 
         [DllImport("aetest.dll", CallingConvention = CallingConvention.Cdecl)]
         public static extern int Init(
@@ -67,32 +82,33 @@ namespace TestAeTestDLL
         {
             NativeMethods.RtcPalStartup(); // This is needed for using debug build of MSRTC dlls
 
-            string path = @"C:\Projects\aetest\testaudio.wav";
+            string path = @"testaudio.wav";
             using (var reader = new WaveFileReader(path))
             {
+                IntPtr encoder = NativeMethods.encoder_construct();
+                
                 if (reader.WaveFormat.Encoding == WaveFormatEncoding.Pcm)
                 {
-                    //int bytesPerFame = (int)(reader.WaveFormat.SampleRate * 0.02) * reader.WaveFormat.Channels * reader.WaveFormat.BlockAlign;
-                    int bytesPerFame = (int)(80 /* what is this? */ * reader.WaveFormat.Channels * reader.WaveFormat.BlockAlign);
-                    byte[] frameBuffer = new byte[bytesPerFame];
+                    int result = NativeMethods.encoder_select(
+                        encoder,
+                        102, // Opus
+                        64000, // https://skype.visualstudio.com/SCC/_search?action=contents&text=510000&type=code&lp=code-Project&filters=ProjectFilters%7BSCC%7D&pageSize=25&result=DefaultCollection/SCC/media_stack_webrtc-src/GBmaster//api/audio_codecs/opus/audio_encoder_opus_config.h
+                        1000,
+                        reader.WaveFormat.Channels);
 
-                    while(reader.Read(frameBuffer, 0, bytesPerFame) > 0)
+                    int sampleRate = NativeMethods.encoder_get_sampling_rate(encoder);
+
+                    int bytesPerFrame = (int)(sampleRate * 0.02 * reader.WaveFormat.BitsPerSample/8 * reader.WaveFormat.Channels); // 20ms per frame
+                    byte[] frameBuffer = new byte[bytesPerFrame];
+
+                    while(reader.Read(frameBuffer, 0, bytesPerFrame) > 0)
                     {
-                        IntPtr encoder = NativeMethods.encoder_construct();
-                        int r = NativeMethods.encoder_select(
-                            encoder,
-                            102, // Opus
-                            64000, // https://skype.visualstudio.com/SCC/_search?action=contents&text=510000&type=code&lp=code-Project&filters=ProjectFilters%7BSCC%7D&pageSize=25&result=DefaultCollection/SCC/media_stack_webrtc-src/GBmaster//api/audio_codecs/opus/audio_encoder_opus_config.h
-                            1000,
-                            reader.WaveFormat.Channels);
-
-                        int sampleRate = NativeMethods.encoder_get_sampling_rate(encoder);
-
                         byte[] encoded = new byte[1000];
                         int encodedLength = encoded.Length;
                         byte[] redudantEncoded = new byte[1000];
                         int redudantEncodedLength = redudantEncoded.Length;
-                        var result = NativeMethods.encoder_encode(encoder, frameBuffer, frameBuffer.Length, encoded, ref encodedLength, redudantEncoded, ref redudantEncodedLength);
+
+                        result = NativeMethods.encoder_encode(encoder, frameBuffer, frameBuffer.Length, encoded, ref encodedLength, redudantEncoded, ref redudantEncodedLength);
 
                         IntPtr decoder = NativeMethods.decoder_construct();
                     }
