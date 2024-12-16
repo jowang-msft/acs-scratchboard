@@ -109,10 +109,9 @@ namespace TestAeTestDLL
                         int redudantEncodedLength = redudantEncoded.Length;
 
                         result = NativeMethods.encoder_encode(encoder, frameBuffer, frameBuffer.Length, encoded, ref encodedLength, redudantEncoded, ref redudantEncodedLength);
-
-                        IntPtr decoder = NativeMethods.decoder_construct();
                     }
                 }
+                IntPtr decoder = NativeMethods.decoder_construct();
             }
 
             //IntPtr aesendPtr = NativeMethods.AESendConstruct();
