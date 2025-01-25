@@ -10,6 +10,7 @@ namespace WBStreamee
     internal class Program
     {
         private const string WB_ORIGIN = "https://alphasandbox.dev.waimeabae.com";
+        //private const string WB_ORIGIN = "https://alpha.waimeabae.com";
         private const uint AUDIO_FEED_VIEW_ID = 1;
         private FrontendChannel channel = null;
         private ILoggerFactory loggerFactory = LoggerFactory.Create(builder => builder.AddConsole());
@@ -42,6 +43,7 @@ namespace WBStreamee
                                         metadata.SecretToken,
                                         profile = "videoconf",
                                         roomId,
+                                        AppEntityId = "*"
                                     }))
                                 {
                                     var result = client.PostAsync(new Uri(WB_ORIGIN + "/samples/app_server/activate"), content).Result;
